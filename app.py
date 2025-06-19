@@ -129,7 +129,12 @@ class HSVLTModel(nn.Module):
         return output
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = HSVLTModel(img_size=224, patch_size=16, emb_size=768, num_classes=len(LABELS)).to(device)
+model = HSVLTModel(
+    img_size=224,
+    patch_size=14,
+    emb_size=768,
+    num_classes=len(LABELS)
+).to(device)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
 
