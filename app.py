@@ -7,15 +7,30 @@ import gdown
 import os
 
 # --- 1. Setup ---
-MODEL_URL = 'https://drive.google.com/file/d/1wImyFjOLuZN_x69j9n9CZPDmvOkyimlV/view?usp=sharing'  # Ganti dengan File ID model
+MODEL_URL = 'https://drive.google.com/uc?id=1wImyFjOLuZN_x69j9n9CZPDmvOkyimlV'  # Link langsung (direct) dari Google Drive
 MODEL_PATH = 'model_hsvlt_trained.pt'
-LABELS = ['alpukat', 'alpukat_matang', 'alpukat_mentah', 'belimbing', 'belimbing_matang', 'belimbing_mentah', 'mangga', 'mangga_matang', 'mangga_mentah']
+LABELS = [
+    'alpukat', 'alpukat_matang', 'alpukat_mentah',
+    'belimbing', 'belimbing_matang', 'belimbing_mentah',
+    'mangga', 'mangga_matang', 'mangga_mentah'
+]
 THRESHOLD = 0.5
 
 # --- 2. Download model dari Google Drive jika belum ada ---
-if not os.path.exists(MODEL_PATH):
-    with st.spinner('Mengunduh model dari Google Drive...'):
+def download_model():
+    with st.spinner('🔄 Mengunduh ulang model dari Google Drive...'):
         gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
+
+# Jika belum ada model, unduh
+if not os.path.exists(MODEL_PATH):
+    download_model()
+
+# Jika ukuran file mencurigakan kecil, hapus & unduh ulang
+elif os.path.getsize(MODEL_PATH) < 50000:  # Threshold bisa disesuaikan
+    st.warning("📦 Ukuran file model terlalu kecil, kemungkinan korup. Mengunduh ulang...")
+    os.remove(MODEL_PATH)
+    download_model()
+
 
 # --- 5. Komponen Model (semua class yang dibutuhkan) ---
 class PatchEmbedding(nn.Module):
@@ -129,6 +144,8 @@ class HSVLTModel(nn.Module):
         return output
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# sesuaikan parameter di dalam kode dengan parameter ketika membuat model
 model = HSVLTModel(
     img_size=224,
     patch_size=14,
