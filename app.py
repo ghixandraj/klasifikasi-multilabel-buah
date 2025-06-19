@@ -112,6 +112,7 @@ class MLPClassifier(nn.Module):
         return self.mlp(x)
 
 # --- 4. Load model ---
+"""""
 class HSVLTModel(nn.Module):
     def __init__(self, img_size=224, patch_size=16, emb_size=768, num_classes=9):
         super().__init__()
@@ -142,6 +143,7 @@ class HSVLTModel(nn.Module):
         x = x.mean(dim=1)
         output = self.classifier(x)
         return output
+"""
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -172,9 +174,12 @@ if uploaded_file is not None:
     st.image(image, caption='Gambar yang diunggah', use_column_width=True)
 
     input_tensor = transform(image).unsqueeze(0).to(device)
-    with torch.no_grad():
-        outputs = model(input_tensor)
-        probs = outputs.cpu().numpy()[0]
+     # --- Dummy output supaya UI tetap jalan ---
+    probs = [0.1] * len(LABELS)  # Semua probabilitas 10%
+    # Jika model sudah diaktifkan, ganti dengan:
+    # with torch.no_grad():
+    #     outputs = model(input_tensor)
+    #     probs = outputs.cpu().numpy()[0]
 
     # Deteksi label dengan threshold
     detected_labels = [(label, prob) for label, prob in zip(LABELS, probs) if prob >= THRESHOLD]
