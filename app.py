@@ -7,8 +7,8 @@ import gdown
 import os
 
 # --- 1. Setup ---
-MODEL_URL = 'https://drive.google.com/uc?id=YOUR_FILE_ID'  # Ganti dengan File ID model
-MODEL_PATH = 'model_buah.pt'
+MODEL_URL = 'https://drive.google.com/file/d/1wImyFjOLuZN_x69j9n9CZPDmvOkyimlV/view?usp=sharing'  # Ganti dengan File ID model
+MODEL_PATH = 'model_hsvlt_trained.pt'
 LABELS = ['alpukat', 'alpukat_matang', 'alpukat_mentah', 'belimbing', 'belimbing_matang', 'belimbing_mentah', 'mangga', 'mangga_matang', 'mangga_mentah']
 THRESHOLD = 0.5
 
