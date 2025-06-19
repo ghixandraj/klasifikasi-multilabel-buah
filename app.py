@@ -31,8 +31,8 @@ class PatchEmbedding(nn.Module):
         return x
 
 class WordEmbedding(nn.Module):
-    def _init_(self, dim):
-        super()._init_()
+    def __init__(self, dim):
+        super().__init__()
 
     def forward(self, x):
         return x  # Dummy placeholder
@@ -49,24 +49,24 @@ class FeatureFusion(nn.Module):
         return torch.cat([v, t], dim=-1)
 
 class ScaleTransformation(nn.Module):
-    def _init_(self, in_dim, out_dim):
-        super()._init_()
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
         self.linear = nn.Linear(in_dim, out_dim)
 
     def forward(self, x):
         return self.linear(x)
 
 class ChannelUnification(nn.Module):
-    def _init_(self, dim):
-        super()._init_()
+    def __init__(self, dim):
+        super().__init__()
         self.norm = nn.LayerNorm(dim)
 
     def forward(self, x):
         return self.norm(x)
 
 class InteractionBlock(nn.Module):
-    def _init_(self, dim):
-        super()._init_()
+    def __init__(self, dim):
+        super().__init__()
         self.attn = nn.MultiheadAttention(dim, num_heads=16, batch_first=True)
 
     def forward(self, x):
@@ -77,16 +77,16 @@ class CrossScaleAggregation(nn.Module):
         return x.unsqueeze(1).mean(dim=1)  # Cross-scale average
 
 class HamburgerHead(nn.Module):
-    def _init_(self, in_dim, out_dim):
-        super()._init_()
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
         self.linear = nn.Linear(in_dim, out_dim)
 
     def forward(self, x):
         return self.linear(x)
 
 class MLPClassifier(nn.Module):
-    def _init_(self, in_dim, num_classes):
-        super()._init_()
+    def __init__(self, in_dim, num_classes):
+        super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(in_dim, 256),
             nn.ReLU(),
