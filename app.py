@@ -17,7 +17,84 @@ if not os.path.exists(MODEL_PATH):
     with st.spinner('Mengunduh model dari Google Drive...'):
         gdown.download(MODEL_URL, MODEL_PATH, quiet=False)
 
-# --- 3. Load model ---
+# --- 5. Komponen Model (semua class yang dibutuhkan) ---
+class PatchEmbedding(nn.Module):
+    def _init_(self, img_size, patch_size, emb_size):
+        super()._init_()
+        self.proj = nn.Conv2d(3, emb_size, kernel_size=patch_size, stride=patch_size)
+
+    def forward(self, x):
+        x = self.proj(x)                   # [B, C, H', W']
+        x = x.flatten(2).transpose(1, 2)   # [B, N_patches, C]
+        return x
+
+class WordEmbedding(nn.Module):
+    def _init_(self, dim):
+        super()._init_()
+
+    def forward(self, x):
+        return x  # Dummy placeholder
+
+class FeatureFusion(nn.Module):
+    def forward(self, v, t):
+        # Pastikan dimensi temporal/textual dan visual sepadan
+        if t.size(1) < v.size(1):
+            pad_len = v.size(1) - t.size(1)
+            pad = torch.zeros(t.size(0), pad_len, t.size(2), device=t.device)
+            t = torch.cat([t, pad], dim=1)
+        elif t.size(1) > v.size(1):
+            t = t[:, :v.size(1), :]
+        return torch.cat([v, t], dim=-1)
+
+class ScaleTransformation(nn.Module):
+    def _init_(self, in_dim, out_dim):
+        super()._init_()
+        self.linear = nn.Linear(in_dim, out_dim)
+
+    def forward(self, x):
+        return self.linear(x)
+
+class ChannelUnification(nn.Module):
+    def _init_(self, dim):
+        super()._init_()
+        self.norm = nn.LayerNorm(dim)
+
+    def forward(self, x):
+        return self.norm(x)
+
+class InteractionBlock(nn.Module):
+    def _init_(self, dim):
+        super()._init_()
+        self.attn = nn.MultiheadAttention(dim, num_heads=16, batch_first=True)
+
+    def forward(self, x):
+        return self.attn(x, x, x)[0]
+
+class CrossScaleAggregation(nn.Module):
+    def forward(self, x):
+        return x.unsqueeze(1).mean(dim=1)  # Cross-scale average
+
+class HamburgerHead(nn.Module):
+    def _init_(self, in_dim, out_dim):
+        super()._init_()
+        self.linear = nn.Linear(in_dim, out_dim)
+
+    def forward(self, x):
+        return self.linear(x)
+
+class MLPClassifier(nn.Module):
+    def _init_(self, in_dim, num_classes):
+        super()._init_()
+        self.mlp = nn.Sequential(
+            nn.Linear(in_dim, 256),
+            nn.ReLU(),
+            nn.Linear(256, num_classes)
+        )
+
+    def forward(self, x):
+        return self.mlp(x)
+
+# --- 4. Load model ---
 class HSVLTModel(nn.Module):
     def __init__(self, img_size=224, patch_size=16, emb_size=768, num_classes=9):
         super().__init__()
@@ -54,13 +131,13 @@ model = HSVLTModel().to(device)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
 
-# --- 4. Transformasi Gambar ---
+# --- 5. Transformasi Gambar ---
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor()
 ])
 
-# --- 5. Antarmuka Streamlit ---
+# --- 6. Antarmuka Streamlit ---
 st.title("🍉 Klasifikasi Multilabel Buah")
 st.write("Upload gambar buah, sistem akan mendeteksi beberapa label sekaligus.")
 
