@@ -19,13 +19,15 @@ if not os.path.exists(MODEL_PATH):
 
 # --- 5. Komponen Model (semua class yang dibutuhkan) ---
 class PatchEmbedding(nn.Module):
-    def _init_(self, img_size, patch_size, emb_size):
-        super()._init_()
+    def __init__(self, img_size: int, patch_size: int, emb_size: int):
+        super().__init__()
+        assert isinstance(patch_size, int), f"patch_size must be int, got {type(patch_size)}"
+        assert isinstance(emb_size, int), f"emb_size must be int, got {type(emb_size)}"
         self.proj = nn.Conv2d(3, emb_size, kernel_size=patch_size, stride=patch_size)
 
     def forward(self, x):
-        x = self.proj(x)                   # [B, C, H', W']
-        x = x.flatten(2).transpose(1, 2)   # [B, N_patches, C]
+        x = self.proj(x)  # [B, emb_size, H/patch, W/patch]
+        x = x.flatten(2).transpose(1, 2)  # [B, N, emb_size]
         return x
 
 class WordEmbedding(nn.Module):
@@ -127,7 +129,7 @@ class HSVLTModel(nn.Module):
         return output
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model = HSVLTModel().to(device)
+model = HSVLTModel(img_size=224, patch_size=16, emb_size=768, num_classes=len(LABELS)).to(device)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
 
