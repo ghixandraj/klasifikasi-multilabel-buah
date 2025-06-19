@@ -148,6 +148,7 @@ class HSVLTModel(nn.Module):
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # sesuaikan parameter di dalam kode dengan parameter ketika membuat model
+"""
 model = HSVLTModel(
     img_size=224,
     patch_size=14,
@@ -156,6 +157,7 @@ model = HSVLTModel(
 ).to(device)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
+"""
 
 # --- 5. Transformasi Gambar ---
 transform = transforms.Compose([
