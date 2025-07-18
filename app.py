@@ -112,7 +112,6 @@ class MLPClassifier(nn.Module):
         return self.mlp(x)
 
 # --- 4. Load model ---
-"""""
 class HSVLTModel(nn.Module):
     def __init__(self, img_size=224, patch_size=16, emb_size=768, num_classes=9):
         super().__init__()
@@ -129,7 +128,7 @@ class HSVLTModel(nn.Module):
     def forward(self, image):
         # Dummy text input
         batch_size = image.size(0)
-        dummy_text = torch.zeros((batch_size, 1)).to(image.device)
+        dummy_text = torch.zeros((batch_size, 1, 768)).to(image.device)  # Sesuaikan dimensi
 
         image_feat = self.patch_embed(image)
         text_feat = self.word_embed(dummy_text)
@@ -143,12 +142,10 @@ class HSVLTModel(nn.Module):
         x = x.mean(dim=1)
         output = self.classifier(x)
         return output
-"""
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # sesuaikan parameter di dalam kode dengan parameter ketika membuat model
-"""
 model = HSVLTModel(
     img_size=224,
     patch_size=14,
@@ -157,7 +154,6 @@ model = HSVLTModel(
 ).to(device)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.eval()
-"""
 
 # --- 5. Transformasi Gambar ---
 transform = transforms.Compose([
