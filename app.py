@@ -171,7 +171,7 @@ uploaded_file = st.file_uploader("Unggah gambar buah", type=['jpg', 'jpeg', 'png
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file).convert('RGB')
-    st.image(image, caption='Gambar yang diunggah', use_column_width=True)
+    st.image(image, caption="Gambar Input", use_container_width=True)
 
     input_tensor = transform(image).unsqueeze(0).to(device)
 
