@@ -1,6 +1,7 @@
 import streamlit as st
 import torch
 import torch.nn as nn
+from safetensors.torch import safe_open
 import torchvision.transforms as transforms
 from PIL import Image
 import gdown
@@ -8,7 +9,7 @@ import os
 
 # --- 1. Setup ---
 MODEL_URL = 'https://drive.google.com/uc?id=1U-phCmWnChUJqxvon8DK-C1rJud1WXv4'
-MODEL_PATH = 'model_hsvlt_trained.pt'
+MODEL_PATH = 'model_1.safetensors'
 LABELS = [
     'alpukat', 'alpukat_matang', 'alpukat_mentah',
     'belimbing', 'belimbing_matang', 'belimbing_mentah',
@@ -132,18 +133,14 @@ class HSVLTModel(nn.Module):
         output = self.classifier(x)
         return output
 
-# --- 4. Load Model ---
+# --- 4. Load Model (.safetensors) ---
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 try:
-    checkpoint = torch.load(MODEL_PATH, map_location=device)
-    if isinstance(checkpoint, dict):
-        # File berisi state_dict
-        model = HSVLTModel(img_size=224, patch_size=14, emb_size=768, num_classes=len(LABELS)).to(device)
-        model.load_state_dict(checkpoint)
-    else:
-        # File berisi keseluruhan model
-        model = checkpoint.to(device)
+    with safe_open(MODEL_PATH, framework="pt", device=device) as f:
+        state_dict = {k: f.get_tensor(k) for k in f.keys()}
+    model = HSVLTModel(img_size=224, patch_size=14, emb_size=768, num_classes=len(LABELS)).to(device)
+    model.load_state_dict(state_dict)
     model.eval()
 except Exception as e:
     st.error(f"❌ Gagal memuat model: {e}")
