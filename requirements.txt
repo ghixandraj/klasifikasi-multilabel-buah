@@ -3,3 +3,4 @@ torch>=2.6.0
 torchvision
 gdown
 Pillow
+safetensors
