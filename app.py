@@ -134,7 +134,8 @@ class HSVLTModel(nn.Module):
         return output
 
 # --- 4. Load Model (.safetensors) ---
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+use_cuda = torch.cuda.is_available()
+device = 'cuda' if use_cuda else 'cpu'
 
 try:
     with safe_open(MODEL_PATH, framework="pt", device=device) as f:
