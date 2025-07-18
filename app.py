@@ -7,7 +7,7 @@ import gdown
 import os
 
 # --- 1. Setup ---
-MODEL_URL = 'https://drive.google.com/uc?id=1wImyFjOLuZN_x69j9n9CZPDmvOkyimlV'  # Link langsung (direct) dari Google Drive
+MODEL_URL = 'https://drive.google.com/uc?id=1U-phCmWnChUJqxvon8DK-C1rJud1WXv4'  # Link langsung (direct) dari Google Drive
 MODEL_PATH = 'model_hsvlt_trained.pt'
 LABELS = [
     'alpukat', 'alpukat_matang', 'alpukat_mentah',
