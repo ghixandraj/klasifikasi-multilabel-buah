@@ -113,7 +113,13 @@ class HSVLTModel(nn.Module):
         self.concat = FeatureFusion()
         self.scale_transform = ScaleTransformation(emb_size * 2, emb_size)
         self.channel_unification = ChannelUnification(emb_size)
-        self.interaction_block = InteractionBlock(emb_size)
+        
+        # PERUBAHAN: dari 1 menjadi beberapa InteractionBlock
+        self.interaction_blocks = nn.ModuleList([
+            InteractionBlock(emb_size),
+            InteractionBlock(emb_size)
+        ])
+        
         self.csa = CrossScaleAggregation()
         self.head = HamburgerHead(emb_size, emb_size)
         self.classifier = MLPClassifier(emb_size, num_classes)
@@ -126,12 +132,16 @@ class HSVLTModel(nn.Module):
         x = self.concat(image_feat, text_feat)
         x = self.scale_transform(x)
         x = self.channel_unification(x)
-        x = self.interaction_block(x)
+        
+        for block in self.interaction_blocks:
+            x = block(x)
+        
         x = self.csa(x)
         x = self.head(x)
         x = x.mean(dim=1)
         output = self.classifier(x)
         return output
+
 
 # --- 4. Load Model (.safetensors) ---
 use_cuda = torch.cuda.is_available()
