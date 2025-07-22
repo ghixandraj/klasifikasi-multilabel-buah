@@ -4,3 +4,4 @@ torchvision
 gdown
 Pillow
 safetensors
+pytorch-grad-cam>=1.4.0
