@@ -97,9 +97,9 @@ class MLPClassifier(nn.Module):
     def __init__(self, in_dim, num_classes):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(in_dim,640),
+            nn.Linear(in_dim,256),
             nn.ReLU(),
-            nn.Linear(640, num_classes)
+            nn.Linear(256, num_classes)
         )
 
     def forward(self, x):
