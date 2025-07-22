@@ -187,7 +187,8 @@ if uploaded_file is not None:
         for label, prob in detected_labels:
             st.write(f"✅ **{label}** ({prob:.2%})")
     else:
-        st.write("🚫 Tidak ada label yang terdeteksi.")
+        st.warning("🚫 Gambar yang diunggah **tidak mengandung buah yang dikenali oleh sistem.** Pastikan gambar yang Anda unggah jelas dan berisi buah seperti alpukat, mangga, atau belimbing.")
+        st.info("ℹ️ Jika Anda yakin gambar mengandung buah, mungkin sistem belum dilatih untuk mengenali jenis tersebut atau kualitas gambar kurang baik.")
 
     with st.expander("📊 Lihat Semua Probabilitas"):
         for label, prob in zip(LABELS, probs):
