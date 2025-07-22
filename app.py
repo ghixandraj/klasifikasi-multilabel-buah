@@ -15,7 +15,7 @@ LABELS = [
     'belimbing', 'belimbing_matang', 'belimbing_mentah',
     'mangga', 'mangga_matang', 'mangga_mentah'
 ]
-THRESHOLD = 0.5
+THRESHOLD = 0.3
 
 # --- 2. Download model dari Google Drive jika belum ada ---
 def download_model():
@@ -106,7 +106,7 @@ class MLPClassifier(nn.Module):
         return self.mlp(x)
 
 class HSVLTModel(nn.Module):
-    def __init__(self, img_size=224, patch_size=14, emb_size=768, num_classes=9):
+    def __init__(self, img_size=210, patch_size=14, emb_size=640, num_classes=9):
         super().__init__()
         self.patch_embed = PatchEmbedding(img_size, patch_size, emb_size)
         self.word_embed = WordEmbedding(emb_size)
@@ -114,15 +114,17 @@ class HSVLTModel(nn.Module):
         self.scale_transform = ScaleTransformation(emb_size * 2, emb_size)
         self.channel_unification = ChannelUnification(emb_size)
         
-        # PERUBAHAN: dari 1 menjadi beberapa InteractionBlock
         self.interaction_blocks = nn.ModuleList([
             InteractionBlock(emb_size),
-            InteractionBlock(emb_size)
+            InteractionBlock(emb_size),
+            InteractionBlock(emb_size),
+            InteractionBlock(emb_size),
         ])
         
         self.csa = CrossScaleAggregation()
         self.head = HamburgerHead(emb_size, emb_size)
         self.classifier = MLPClassifier(emb_size, num_classes)
+
 
     def forward(self, image):
         batch_size = image.size(0)
@@ -150,7 +152,7 @@ device = 'cuda' if use_cuda else 'cpu'
 try:
     with safe_open(MODEL_PATH, framework="pt", device=device) as f:
         state_dict = {k: f.get_tensor(k) for k in f.keys()}
-    model = HSVLTModel(img_size=224, patch_size=14, emb_size=768, num_classes=len(LABELS)).to(device)
+    model = HSVLTModel(img_size=210, patch_size=14, emb_size=640, num_classes=len(LABELS)).to(device)
     model.load_state_dict(state_dict)
     model.eval()
 except Exception as e:
@@ -159,7 +161,7 @@ except Exception as e:
 
 # --- 5. Transformasi Gambar ---
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((210, 210)), 
     transforms.ToTensor()
 ])
 
