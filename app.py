@@ -6,11 +6,6 @@ import torchvision.transforms as transforms
 from PIL import Image
 import gdown
 import os
-import numpy as np
-
-from pytorch_grad_cam import GradCAM
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
-from pytorch_grad_cam.utils.image import show_cam_on_image
 
 # --- 1. Setup ---
 MODEL_URL = 'https://drive.google.com/uc?id=1U-phCmWnChUJqxvon8DK-C1rJud1WXv4'
@@ -22,17 +17,19 @@ LABELS = [
 ]
 THRESHOLD = 0.5
 
+# --- 2. Download model dari Google Drive jika belum ada ---
 def download_model():
     with st.spinner('🔄 Mengunduh ulang model dari Google Drive...'):
         gdown.download(MODEL_URL, MODEL_PATH, quiet=False, fuzzy=True)
 
+# Unduh ulang model jika belum ada atau ukurannya mencurigakan kecil
 if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 50000:
     if os.path.exists(MODEL_PATH):
         st.warning("📦 Ukuran file model terlalu kecil, kemungkinan korup. Mengunduh ulang...")
         os.remove(MODEL_PATH)
     download_model()
 
-# --- 2. Komponen Model ---
+# --- 3. Komponen Model ---
 class PatchEmbedding(nn.Module):
     def __init__(self, img_size: int, patch_size: int, emb_size: int):
         super().__init__()
@@ -116,10 +113,13 @@ class HSVLTModel(nn.Module):
         self.concat = FeatureFusion()
         self.scale_transform = ScaleTransformation(emb_size * 2, emb_size)
         self.channel_unification = ChannelUnification(emb_size)
+        
+        # PERUBAHAN: dari 1 menjadi beberapa InteractionBlock
         self.interaction_blocks = nn.ModuleList([
             InteractionBlock(emb_size),
             InteractionBlock(emb_size)
         ])
+        
         self.csa = CrossScaleAggregation()
         self.head = HamburgerHead(emb_size, emb_size)
         self.classifier = MLPClassifier(emb_size, num_classes)
@@ -132,15 +132,18 @@ class HSVLTModel(nn.Module):
         x = self.concat(image_feat, text_feat)
         x = self.scale_transform(x)
         x = self.channel_unification(x)
+        
         for block in self.interaction_blocks:
             x = block(x)
+        
         x = self.csa(x)
         x = self.head(x)
         x = x.mean(dim=1)
         output = self.classifier(x)
         return output
 
-# --- 3. Load Model (.safetensors) ---
+
+# --- 4. Load Model (.safetensors) ---
 use_cuda = torch.cuda.is_available()
 device = 'cuda' if use_cuda else 'cpu'
 
@@ -154,15 +157,13 @@ except Exception as e:
     st.error(f"❌ Gagal memuat model: {e}")
     st.stop()
 
-# --- 4. Transformasi Gambar ---
+# --- 5. Transformasi Gambar ---
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.ToTensor()
-    # Jika model dilatih dengan normalization:
-    # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
 ])
 
-# --- 5. Antarmuka Streamlit ---
+# --- 6. Antarmuka Streamlit ---
 st.title("🍉 Klasifikasi Multilabel Buah")
 st.write("Upload gambar buah, sistem akan mendeteksi beberapa label sekaligus.")
 
@@ -174,7 +175,6 @@ if uploaded_file is not None:
 
     input_tensor = transform(image).unsqueeze(0).to(device)
 
-    # --- Prediksi ---
     with torch.no_grad():
         outputs = model(input_tensor)
         probs = torch.sigmoid(outputs).cpu().numpy()[0].tolist()
@@ -192,20 +192,3 @@ if uploaded_file is not None:
     with st.expander("📊 Lihat Semua Probabilitas"):
         for label, prob in zip(LABELS, probs):
             st.write(f"{label}: {prob:.2%}")
-
-    # --- Grad-CAM ---
-    st.subheader("📸 Heatmap perhatian model (Grad-CAM)")
-    try:
-        top_idx = int(torch.tensor(probs).argmax().item())
-        targets = [ClassifierOutputTarget(top_idx)]
-        target_layers = [model.patch_embed.proj]
-
-        cam = GradCAM(model=model, target_layers=target_layers, use_cuda=use_cuda)
-        grayscale_cam = cam(input_tensor=input_tensor, targets=targets)[0, :]
-
-        rgb_img = np.array(image.resize((224, 224))) / 255.0
-        cam_image = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
-
-        st.image(cam_image, caption=f"Area fokus untuk label '{LABELS[top_idx]}'")
-    except Exception as e:
-        st.warning(f"⚠️ Tidak bisa membuat heatmap Grad-CAM: {e}")
