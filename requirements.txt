@@ -1,7 +1,6 @@
-streamlit==1.28.2
-torch==2.2.2
-torchvision==0.15.2
-gdown==4.7.1
-Pillow==10.2.0
-safetensors==0.4.2
-pytorch-grad-cam==1.4.0
+pip install streamlit==1.28.2
+pip install torch==2.2.2 torchvision==0.15.2
+pip install gdown==4.7.1
+pip install Pillow==10.2.0
+pip install safetensors==0.4.2
+pip install pytorch-grad-cam==1.4.0
