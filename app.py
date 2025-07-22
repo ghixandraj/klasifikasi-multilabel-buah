@@ -8,7 +8,7 @@ import gdown
 import os
 
 # --- 1. Setup ---
-MODEL_URL = 'https://drive.google.com/uc?id=1U-phCmWnChUJqxvon8DK-C1rJud1WXv4'
+MODEL_URL = 'https://drive.google.com/uc?id=1OB3XnCwW2MiEAzPJDMO9bD50_6qG4aR_'
 MODEL_PATH = 'model_1.safetensors'
 LABELS = [
     'alpukat', 'alpukat_matang', 'alpukat_mentah',
