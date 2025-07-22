@@ -33,10 +33,10 @@ if not os.path.exists(MODEL_PATH) or os.path.getsize(MODEL_PATH) < 50000:
 class PatchEmbedding(nn.Module):
     def __init__(self, in_channels=3, patch_size=14, emb_size=640):
         super().__init__()
-        self.projection = nn.Conv2d(in_channels, emb_size, kernel_size=patch_size, stride=patch_size)
+        self.proj = nn.Conv2d(in_channels, emb_size, kernel_size=patch_size, stride=patch_size)
 
     def forward(self, x):
-        x = self.projection(x)
+        x = self.proj(x)
         x = x.flatten(2)
         x = x.transpose(1, 2)
         return x
@@ -100,13 +100,13 @@ class CrossScaleAggregation(nn.Module):
 class HamburgerHead(nn.Module):
     def __init__(self, in_dim, out_dim):
         super().__init__()
-        self.fc = nn.Linear(in_dim, out_dim)
+        self.linear = nn.Linear(in_dim, out_dim)
 
     def forward(self, x):
-        return self.fc(x)
+        return self.linear(x)
 
 class MLPClassifier(nn.Module):
-    def __init__(self, in_dim=640, num_classes=9, hidden_dim=640):
+    def __init__(self, in_dim=640, num_classes=9, hidden_dim=256):  # 256 sesuai checkpoint
         super().__init__()
         self.mlp = nn.Sequential(
             nn.Linear(in_dim, hidden_dim),
@@ -121,7 +121,7 @@ class HSVLTModel(nn.Module):
     def __init__(self, img_size=210, patch_size=14, emb_size=640, num_classes=9):
         super().__init__()
         self.patch_embed = PatchEmbedding(patch_size=patch_size, emb_size=emb_size)
-        self.word_embed = nn.Identity()  # Placeholder for WordEmbedding
+        self.word_embed = nn.Identity()
         self.concat = FeatureFusion()
         self.scale_transform = ScaleTransformation(emb_size * 2, emb_size)
         self.channel_unification = ChannelUnification(emb_size)
@@ -132,12 +132,12 @@ class HSVLTModel(nn.Module):
             InteractionBlock(emb_size)
         )
         self.csa = CrossScaleAggregation(embed_dim=emb_size)
-        self.head = HamburgerHead(emb_size, emb_size)
-        self.classifier = MLPClassifier(in_dim=emb_size, num_classes=num_classes)
+        self.head = HamburgerHead(emb_size, emb_size)  # head.linear
+        self.classifier = MLPClassifier(in_dim=emb_size, num_classes=num_classes, hidden_dim=256)
 
     def forward(self, image):
         B = image.size(0)
-        dummy_text = torch.randn(B, 1, 640).to(image.device)  # replace with actual embedding if available
+        dummy_text = torch.randn(B, 1, 640).to(image.device)
         image_feat = self.patch_embed(image)
         x = self.concat(image_feat, dummy_text)
         x = self.scale_transform(x)
@@ -154,7 +154,7 @@ try:
     with safe_open(MODEL_PATH, framework="pt", device=device) as f:
         state_dict = {k: f.get_tensor(k) for k in f.keys()}
     model = HSVLTModel().to(device)
-    model.load_state_dict(state_dict)
+    model.load_state_dict(state_dict, strict=False)
     model.eval()
 except Exception as e:
     st.error(f"❌ Gagal memuat model: {e}")
