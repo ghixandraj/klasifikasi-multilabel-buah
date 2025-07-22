@@ -76,7 +76,7 @@ class ChannelUnification(nn.Module):
 class InteractionBlock(nn.Module):
     def __init__(self, dim):
         super().__init__()
-        self.attn = nn.MultiheadAttention(dim, num_heads=16, batch_first=True)
+        self.attn = nn.MultiheadAttention(dim, num_heads=10, batch_first=True)
 
     def forward(self, x):
         return self.attn(x, x, x)[0]
@@ -97,16 +97,16 @@ class MLPClassifier(nn.Module):
     def __init__(self, in_dim, num_classes):
         super().__init__()
         self.mlp = nn.Sequential(
-            nn.Linear(in_dim, 256),
+            nn.Linear(in_dim,640),
             nn.ReLU(),
-            nn.Linear(256, num_classes)
+            nn.Linear(640, num_classes)
         )
 
     def forward(self, x):
         return self.mlp(x)
 
 class HSVLTModel(nn.Module):
-    def __init__(self, img_size=224, patch_size=16, emb_size=768, num_classes=9):
+    def __init__(self, img_size=224, patch_size=14, emb_size=768, num_classes=9):
         super().__init__()
         self.patch_embed = PatchEmbedding(img_size, patch_size, emb_size)
         self.word_embed = WordEmbedding(emb_size)
